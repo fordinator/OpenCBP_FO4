@@ -194,7 +194,10 @@ void hk_ProcessEventQueue_Internal(void *thisPtr)
 }
 
 // See f4se/Hooks_Threads.cpp
-// TODO someday address library.  someday.
+// WARNING: This address is for older runtime versions and MUST be updated for 1.10.984!
+// TODO: Use Address Library for version independence instead of hardcoded addresses
+// Original address 0x01A09CB0 was for runtime 1.10.163
+// For 1.10.984 this address needs to be determined through reverse engineering or Address Library
 RelocPtr <void*> ProcessEventQueue_Internal(0x01A09CB0);
 
 DetourXS renderDetour;

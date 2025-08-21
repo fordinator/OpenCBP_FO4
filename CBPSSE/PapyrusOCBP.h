@@ -1,5 +1,7 @@
 #pragma once
 
+#define _SILENCE_AMP_DEPRECATION_WARNINGS
+
 #include "f4se/GameTypes.h"
 #include "f4se/PapyrusVM.h"
 #include <string>

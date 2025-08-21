@@ -25,6 +25,7 @@
 
 #include <unordered_set>
 
+#define _SILENCE_AMP_DEPRECATION_WARNINGS
 #include <concurrent_unordered_map.h>
 #include <concurrent_vector.h>
 #include <ppl.h>

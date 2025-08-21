@@ -1,4 +1,7 @@
 #pragma once
+
+#define _SILENCE_AMP_DEPRECATION_WARNINGS
+
 #include <unordered_set>
 #include <set>
 #include <map>
