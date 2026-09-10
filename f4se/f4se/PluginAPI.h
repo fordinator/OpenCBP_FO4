@@ -293,10 +293,14 @@ struct F4SEPluginVersionData
 	enum
 	{
 		// set this if you exclusively use signature matching to find your addresses and have NO HARDCODED ADDRESSES
+		// the F4SE code does not use signature matching, so calling functions in the F4SE headers is not safe with this flag
 		kAddressIndependence_Signatures = 1 << 0,
 
 		// set this if you are using a 1.10.980+ version of the Address Library
 		kAddressIndependence_AddressLibrary_1_10_980 = 1 << 1,
+
+		// set this if you are using a 1.11.137+ version of the Address Library
+		kAddressIndependence_AddressLibrary_1_11_137 = 1 << 2,
 	};
 	
 	enum
@@ -306,6 +310,9 @@ struct F4SEPluginVersionData
 
 		// works with the structure layout in 1.10.980+
 		kStructureIndependence_1_10_980Layout = 1 << 1,
+
+		// works with the structure layout in 1.11.137+
+		kStructureIndependence_1_11_137Layout = 1 << 2,
 	};
 
 	UInt32	dataVersion;			// set to kVersion

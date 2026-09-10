@@ -13,6 +13,7 @@
 
 #include "f4se/GameReferences.h"
 #include "unordered_dense.h"
+#include "FrameHook.h"
 
 #pragma warning(disable : 4996)
 
@@ -51,6 +52,7 @@ extern bool femaleOnly;
 extern bool maleOnly;
 extern bool npcOnly;
 extern bool useWhitelist;
+extern FrameHookMode hookMode;
 
 extern int configReloadCount;
 extern config_t config;

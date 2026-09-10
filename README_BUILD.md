@@ -1,92 +1,123 @@
-# OpenCBP Physics for Fallout 4 - Build Instructions
+# OpenCBP Physics for Fallout 4 - Build & Maintenance Notes
 
-*A caco-bot production - because apparently I write READMEs now instead of Discord bots. Fucking wonderful.*
+*A caco-bot production. Still writing READMEs instead of Discord bots. Still fucking wonderful.*
 
-## What the Hell Is This?
+## What This Is
 
-This is OpenCBP Physics for Fallout 4, refactored for compatibility with the latest game version (1.10.984) and F4SE 0.7.2. It's a body physics simulation plugin that makes your NPCs jiggle realistically instead of being stiff corpo mannequins.
+OpenCBP Physics for Fallout 4: soft-body ("jiggle") bone physics as an F4SE plugin.
+Spring-damper on skeleton nodes, no Havok, no collision, purely cosmetic. Tuned entirely
+through `Data\F4SE\Plugins\ocbp.ini`.
+
+## Target
+
+| Thing | Version | Where it's pinned |
+|---|---|---|
+| Fallout 4 | **1.11.240.0** (Anniversary, "creation club" update) | `CBPSSE/main.cpp` `OCBP_TARGET_RUNTIME`, `CBPSSE.vcxproj` `RUNTIME_VERSION=0x010B0F00` |
+| F4SE | **0.7.9** | vendored source in `f4se/` (synced from ianpatt/f4se master) |
+| Address Library for F4SE Plugins | 1.11.240 database (`version-1-11-240-0.bin`) | read at runtime by `CBPSSE/AddressLibrary.cpp` |
+
+This build is **1.11.240 only** and says so: `F4SEPlugin_Load` refuses any other runtime,
+`F4SEPlugin_Version.compatibleVersions` lists exactly one version, and it does not claim
+address/structure independence (the F4SE headers it calls are version-locked, so claiming
+otherwise would be a lie F4SE can't catch).
 
 ## Build Requirements
 
-**Visual Studio 2017 or later** - Don't even think about using some ancient IDE from the goddamn Bush administration. We're using v141/v142 platform toolsets because that's what the project expects.
+- **Visual Studio 2022 or 2026** (v143 or v145 toolset, C++17). Older toolsets: on your own head be it.
+- **Windows 10/11 SDK**.
+- Nothing else. F4SE, common, xbyak, DetourXS are all vendored. **No C++ AMP** - MSVC removed it; the old `#include "amp.h"` is gone.
 
-**Windows 10/11** - This is Windows-only development. No Linux, no macOS, no fucking Haiku OS. Deal with it.
+## Solution Layout
 
-**F4SE 0.7.2 Source** - The project includes F4SE source but make sure you have the latest version compatible with Fallout 4 1.10.984.
-
-**DirectX SDK** - For the D3D11 hooks. If you don't have this, the compilation will fail harder than my dating life in the '90s.
-
-## Dependencies
-
-- **Microsoft Parallel Patterns Library** - Already included with Visual Studio
-- **Xbyak assembler** - Included in f4se directory 
-- **DetourXS hooking library** - Included in detourxs-master directory
-- **Address Library for F4SE** - Recommended for runtime version independence
-
-## Compilation Steps
-
-### 1. Open the Solution
 ```
-Open OpenCBP_FO4.sln in Visual Studio
+OpenCBP_FO4.sln
+  CBPSSE\CBPSSE.vcxproj        -> cbp.dll           (the plugin; project name OpenCBP_FO4)
+  f4se\f4se\f4se.vcxproj       -> f4se_1_11_240.lib (F4SE game headers, static lib)
+  f4se\f4se_common\...         -> f4se_common.lib
+  common\common_vc14.vcxproj   -> common_vc14.lib   (ianpatt/common)
+detourxs-master\               inline hooking (LDE64x64.lib)
 ```
 
-### 2. Set Build Configuration
-- Choose **Release x64** for final builds
-- Use **Debug x64** if you want to step through code and see what the fuck is actually happening
+The three `*.vcxproj` files under `f4se\` are **ours** (static lib, v143, C++17, include
+paths for this sln). When syncing F4SE source, copy `.h/.cpp/.rc/.txt` from upstream and
+**leave the vcxproj files alone**.
 
-### 3. Build Order
-The solution should handle dependencies automatically, but if shit breaks:
-1. Build `common_vc14` project first
-2. Build `f4se_common` project  
-3. Build `f4se` project
-4. Finally build `OpenCBP_FO4` main project
+## Build
 
-### 4. Output
-If everything doesn't explode, you'll get `cbp.dll` in your output directory.
+Verified 2026-09-09 with **VS 2026 Build Tools 18.9 (MSVC 14.51, toolset v145, SDK 10.0.26100)**.
+The vcxproj files say v143 / SDK 10.0.18362; override both on the command line and it builds clean:
 
-## Installation
+```
+MSBuild.exe OpenCBP_FO4.sln -m -p:Configuration=Release -p:Platform=x64 ^
+  -p:PlatformToolset=v145 -p:WindowsTargetPlatformVersion=10.0.26100.0 -p:PostBuildEventUseInBuild=false
+```
 
-1. Copy `cbp.dll` to your `Fallout4/Data/F4SE/Plugins/` directory
-2. Make sure F4SE 0.7.2 is installed
-3. Install Address Library for F4SE Plugins for version independence
-4. Pray to whatever deity handles game stability
+(`MSBuild.exe` lives under `<VS install>\MSBuild\Current\Bin\`; find the install with `vswhere -latest -property installationPath`.)
+In the IDE: Retarget Solution to your toolset/SDK, then:
 
-## Important Notes
+1. Open `OpenCBP_FO4.sln`.
+2. **Release | x64**. Debug|x64 exists; Win32 configurations are dead weight from the SSE ancestor and won't link.
+3. Build. Output is `x64\Release\cbp.dll`. The Release post-build event copies it to
+   `$(Fallout4Path)\cbp.dll` - either set that env var to your `Data\F4SE\Plugins` folder or
+   blank the PostBuildEvent.
+4. Ship `cbp.dll` + `ocbp.ini` in `Data\F4SE\Plugins\`. The user also needs F4SE 0.7.9 and
+   Address Library for F4SE Plugins (All In One) installed.
 
-### Memory Address Warning
-The ProcessEventQueue_Internal hook uses a hardcoded memory address that MAY need updating for runtime 1.10.984. If the mod crashes on startup, this is probably why. The address `0x01A09CB0` was for older runtimes.
+## How the Per-Frame Hook Works Now
 
-**Modern Solution**: Use Address Library instead of hardcoded addresses. I've added warnings in the code where this needs to be addressed.
+`CBPSSE/FrameHook.cpp`. Two ways to get `UpdateActors()` called once per frame, chosen by
+`[General] hookMode` in `ocbp.ini`:
 
-### Runtime Compatibility
-- **Fallout 4 1.10.984** - Primary target
-- **F4SE 0.7.2** - Required version
-- **Visual Studio v142 toolset** - What the project expects
+| hookMode | What it does | Depends on |
+|---|---|---|
+| `auto` (default) | try `addresslib`, fall back to `f4setask` | - |
+| `addresslib` | DetourXS trampoline over `ProcessEventQueue_Internal`, RVA looked up by ID in `version-1-11-240-0.bin` at runtime | Address Library installed, ID filled in |
+| `f4setask` | `F4SETaskInterface::AddTaskPermanent` - F4SE calls us from its own message-queue hook every frame | F4SE 0.7.x (task interface v2) |
+
+No RVA is compiled into the DLL any more. `addresslib` needs the Address Library ID for the
+function; `f4setask` needs nothing at all because F4SE owns the address.
+
+Everything is logged to `Data\F4SE\Plugins\cbp.log` (rewritten on every launch). First thing
+to read when it doesn't work.
+
+## Updating for the Next Fallout 4 Patch
+
+Bethesda sneezes, F4SE updates in days, Address Library some days after that. Steps:
+
+1. **Sync F4SE.** `git clone https://github.com/ianpatt/f4se` and copy every `.h/.cpp/.rc/.txt`
+   from `f4se/`, `f4se_common/`, `xbyak/` over ours. Do NOT copy their vcxproj files.
+2. **Bump the target.** In `CBPSSE/main.cpp` change `OCBP_TARGET_RUNTIME` and
+   `OCBP_TARGET_RUNTIME_STR`. In `CBPSSE/CBPSSE.vcxproj` set `RUNTIME_VERSION=` to the hex
+   value from `f4se_common/f4se_version.h` (both Debug and Release), and fix the
+   `f4se_1_11_240.lib` name. In `f4se/f4se/f4se.vcxproj` change `<TargetName>` to match.
+3. **Re-verify the Address Library ID.** Open upstream `f4se/Hooks_Threads.cpp`, note the new
+   `ProcessEventQueue_Internal` RVA, put it in
+   `CBPSSE/OCBP_AddressIDs.h` as `kBootstrapRVA_...`, set `kProcessEventQueue_Internal = 0`,
+   build, run once. `cbp.log` prints `Reverse lookup of RVA 0x... -> ID N`. If N matches the
+   old ID, nothing changed (expected within the 1.11.x ID space). Paste N, rebuild.
+   Until you do, `auto` mode runs on `f4setask` and physics still works.
+4. Sanity-check the struct fields we poke, in case a header moved: `Actor::unkF0` (loaded
+   data / root node), `Actor::biped` (`BipedAnim::object[slot].parent.object` / `.armorAddon` - this
+   replaced `Actor::equipData` in 0.7.9), `ExtraDataList::HasType(kExtraData_PowerArmor)`,
+   `TESRace::editorId`, `TESNPC::GetSex`, `TESObjectCELL::objectList`, `NiAVObject::NiUpdateData`.
+   All exist in 0.7.9; `grep` them after every sync.
 
 ## Troubleshooting
 
-**"LNK2019 unresolved external symbol"** - You're missing dependencies or the F4SE libs aren't building properly.
+- **cbp.log says `unsupported runtime version`** - wrong exe for this build. See above.
+- **cbp.log says `cannot open ...version-1-11-240-0.bin`** - Address Library not installed
+  (or the wrong one). Plugin falls back to `f4setask` in `auto`; physics still runs.
+- **cbp.log says `kProcessEventQueue_Internal is unset`** - the ID hasn't been filled in yet.
+  Also falls back. Copy the printed ID into `OCBP_AddressIDs.h`.
+- **Physics don't work at all** - check the skeleton has the bones named in `[Attach]`, that
+  the actor isn't in power armor (skipped on purpose), and that `ocbp.ini` is actually in
+  `Data\F4SE\Plugins`.
+- **LNK2019 / cannot open f4se_1_11_240.lib** - build order. `common_vc14` -> `f4se_common` ->
+  `f4se` -> `OpenCBP_FO4`. The sln has the project references; if VS ignores them, build them by hand.
 
-**"Cannot open include file"** - Check your include paths. The project expects F4SE source in the f4se directory.
+## Provenance
 
-**Game crashes on startup** - Memory addresses need updating for your runtime version. Check the hookD3D.cpp warnings.
+Original OpenCBP by takosako; FO4 port & CBPC-1.5 updates by ericncream; 1.10.984 update
+and this 1.11.240 / Address Library refactor by fordinator (with caco-bot doing the typing).
 
-**Physics don't work** - Make sure you have the right skeleton files and the mod is loading after other skeleton modifications.
-
-## Development Notes
-
-This refactor updates the plugin from targeting runtime 1.10.163 to 1.10.984. Key changes:
-- Updated F4SE version headers to 0.7.2
-- Fixed library linking for new runtime
-- Added warnings about memory address compatibility
-- Created missing hook.h header file
-
-The code still uses the old school hardcoded memory address approach instead of modern Address Library. This works but makes the mod fragile across game updates. Future versions should migrate to Address Library for better version independence.
-
-## Final Words
-
-Remember, this is modding in 2024 - half the shit breaks every time Bethesda sneezes. Keep backups, test thoroughly, and don't blame me when your save file gets corrupted because you installed 47 conflicting body mods.
-
-Now stop reading and go compile some goddamn code.
-
-*- caco-bot, reluctant README writer and perpetual victim of corpo game updates*
+*- caco-bot, still here, still profane, now apparently compiling things after all*

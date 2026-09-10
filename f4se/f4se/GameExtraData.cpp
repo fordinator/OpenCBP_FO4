@@ -2,16 +2,16 @@
 #include "f4se/GameObjects.h"
 
 // ??_7ExtraPowerLinks@@6B@
-RelocAddr <uintptr_t> s_ExtraPowerLinksVtbl(0x0227C970);
+RelocAddr <uintptr_t> s_ExtraPowerLinksVtbl(0x02470360);
 
 // ??_7ExtraInstanceData@@6B@
-RelocAddr <uintptr_t> s_ExtraInstanceDataVtbl(0x0227E6E0);
+RelocAddr <uintptr_t> s_ExtraInstanceDataVtbl(0x024720D0);
 
 // ??_7ExtraHealth@@6B@
-RelocAddr <uintptr_t> s_ExtraHealthVtbl(0x0227C7D0);
+RelocAddr <uintptr_t> s_ExtraHealthVtbl(0x024701C0);
 
 // ??_7ExtraMaterialSwap@@6B@
-RelocAddr <uintptr_t> s_ExtraMaterialSwapVtbl(0x0227CED0);
+RelocAddr <uintptr_t> s_ExtraMaterialSwapVtbl(0x024708C0);
 
 bool ExtraDataList::PresenceBitfield::HasType(UInt32 type) const
 {
@@ -139,7 +139,7 @@ ExtraInstanceData* ExtraInstanceData::Create(TESForm * baseForm, TBO_InstanceDat
 	pInstanceData->type = kExtraData_InstanceData;
 	pInstanceData->baseForm = baseForm;
 	pInstanceData->instanceData = instanceData;
-	InterlockedIncrement(&instanceData->m_refCount);
+	InterlockedIncrement(&instanceData->refCount);
 	return pInstanceData;
 }
 

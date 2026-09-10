@@ -27,6 +27,15 @@
     <ClInclude Include="log.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="AddressLibrary.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="FrameHook.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="OCBP_AddressIDs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="Thing.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -104,7 +113,10 @@
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="hookD3D.cpp">
+    <ClCompile Include="FrameHook.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="AddressLibrary.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="scan.cpp">

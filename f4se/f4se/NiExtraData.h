@@ -11,7 +11,7 @@ class NiExtraData : public NiObject
 public:
 	virtual ~NiExtraData() { };
 
-	virtual NiRTTI				* GetRTTI(void) override { return NIRTTI_NiExtraData; };
+	virtual NiRTTI				* GetRTTI(void) override { return RelocateNiRTTI(NiRTTI_NiExtraData); };
 
 	virtual void				LoadBinary(void * stream) override { CALL_MEMBER_FN(this, Internal_LoadBinary)(stream); };
 	virtual void				SaveBinary(void * stream) override { CALL_MEMBER_FN(this, Internal_SaveBinary)(stream); };
@@ -32,9 +32,9 @@ public:
 
 	MEMBER_FN_PREFIX(NiObject);
 	// 
-	DEFINE_MEMBER_FN(Internal_LoadBinary, void, 0x015A0D30, void * stream);
+	DEFINE_MEMBER_FN(Internal_LoadBinary, void, 0x016BBDE0, void * stream);
 	// 
-	DEFINE_MEMBER_FN(Internal_SaveBinary, void, 0x015A0DD0, void * stream);
+	DEFINE_MEMBER_FN(Internal_SaveBinary, void, 0x016BBE80, void * stream);
 };
 
 // 20
@@ -82,7 +82,7 @@ public:
 protected:
 	// Fills the vertex data from the original object's vertex data in NiPoint3 layout
 	MEMBER_FN_PREFIX(BSFaceGenBaseMorphExtraData);
-	DEFINE_MEMBER_FN(ctor, BSFaceGenBaseMorphExtraData*, 0x00693710, BSTriShape * shape);
+	DEFINE_MEMBER_FN(ctor, BSFaceGenBaseMorphExtraData*, 0x006E71F0, BSTriShape * shape);
 };
 
 extern RelocAddr<uintptr_t> s_BSFaceGenBaseMorphExtraDataVtbl;

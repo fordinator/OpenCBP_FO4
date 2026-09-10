@@ -185,35 +185,33 @@ bool actorUtils::IsBoneInWhitelist(Actor* actor, std::string boneName)
 
 const actorUtils::EquippedArmor actorUtils::GetActorEquippedArmor(Actor* actor, UInt32 slot)
 {
-    bool isEquipped = false;
-    bool isArmorIgnored = false;
-
+    // F4SE 0.7.9: the old Actor::equipData (ActorEquipData::slots[]) is gone.
+    // The third-person biped (Actor::biped at 0x428) holds the same per-slot
+    // data: parent.object is the worn item, armorAddon is what used to be "model".
     if (!actorUtils::IsActorValid(actor))
     {
         logger.Error("Actor is not valid");
         return actorUtils::EquippedArmor{ nullptr, nullptr };
     }
-    if (!actor->equipData || !actor->equipData->slots)
+    if (slot >= BIPOBJECT::BIPED_OBJECT::kTotal)
     {
-        logger.Error("Actor has no equipData");
+        logger.Error("slot %u out of range", slot);
         return actorUtils::EquippedArmor{ nullptr, nullptr };
     }
 
-    isEquipped = actor->equipData->slots[slot].item;
-
-    // Check if armor is ignored
-    if (isEquipped)
+    BipedAnim* biped = actor->biped.get();
+    if (!biped)
     {
-        if (!actor->equipData->slots[slot].item)
-        {
-            logger.Error("slot %d item check failed.", slot);
-            // redundant check but just in case
-            return actorUtils::EquippedArmor{ nullptr, nullptr };
-        }
-        return actorUtils::EquippedArmor{ actor->equipData->slots[slot].item, actor->equipData->slots[slot].model };
+        logger.Info("Actor %08x has no biped data", actor->formID);
+        return actorUtils::EquippedArmor{ nullptr, nullptr };
     }
 
-    return actorUtils::EquippedArmor{ nullptr, nullptr };
+    const BIPOBJECT& obj = biped->object[slot];
+    if (!obj.parent.object)
+    {
+        return actorUtils::EquippedArmor{ nullptr, nullptr };
+    }
+    return actorUtils::EquippedArmor{ obj.parent.object, obj.armorAddon };
 }
 
 UInt64 actorUtils::BuildActorKey(Actor* actor)

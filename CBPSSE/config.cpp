@@ -28,6 +28,7 @@ bool femaleOnly = false;
 bool maleOnly = false;
 bool npcOnly = false;
 bool useWhitelist = false;
+FrameHookMode hookMode = FrameHookMode::Auto;   // read once at startup; the hook is installed once
 
 config_t config;
 concurrency::concurrent_unordered_map<UInt32, armorOverrideData> configArmorOverrideMap;
@@ -132,6 +133,7 @@ bool LoadConfig()
     playerOnly = configReader.GetBoolean("General", "playerOnly", false);
     npcOnly = configReader.GetBoolean("General", "npcOnly", false);
     useWhitelist = configReader.GetBoolean("General", "useWhitelist", false);
+    hookMode = ParseFrameHookMode(configReader.Get("General", "hookMode", "auto").c_str());
 
     if (useWhitelist)
     {

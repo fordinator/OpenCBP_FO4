@@ -1,7 +1,7 @@
 #include "f4se/GameCamera.h"
 
 // 
-RelocPtr <PlayerCamera *> g_playerCamera(0x02E649D8);
+RelocPtr <PlayerCamera *> g_playerCamera(0x030E6E58);
 
 SInt32 PlayerCamera::GetCameraStateId(TESCameraState * state)
 {

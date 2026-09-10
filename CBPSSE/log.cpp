@@ -1,48 +1,57 @@
 #include <stdarg.h>
+#include <mutex>
 #include "log.h"
 
 #pragma warning(disable : 4996)
 
-// TODO make better macro
-//#define LOG_ON
-
 CbpLogger::CbpLogger(const char* fname)
+    : handle(nullptr)
 {
-#ifdef LOG_ON
-    handle = fopen(fname, "a");
+    handle = fopen(fname, "w");
     if (handle)
     {
-        fprintf(handle, "CBP Log initialized\n");
+        fprintf(handle, "OpenCBP log initialized\n");
+        fflush(handle);
     }
-#endif
+}
+
+CbpLogger::~CbpLogger()
+{
+    if (handle)
+    {
+        fclose(handle);
+        handle = nullptr;
+    }
 }
 
 void CbpLogger::Info(const char* fmt...)
 {
-#ifdef LOG_ON
+#ifdef CBP_VERBOSE_LOG
     if (handle)
     {
+        std::unique_lock<std::shared_mutex> lock(log_lock);
         va_list argptr;
         va_start(argptr, fmt);
         vfprintf(handle, fmt, argptr);
         va_end(argptr);
         fflush(handle);
     }
+#else
+    (void)fmt;
 #endif
 }
 
 void CbpLogger::Error(const char* fmt...)
 {
-#ifdef LOG_ON
     if (handle)
     {
+        std::unique_lock<std::shared_mutex> lock(log_lock);
         va_list argptr;
         va_start(argptr, fmt);
         vfprintf(handle, fmt, argptr);
         va_end(argptr);
         fflush(handle);
     }
-#endif
 }
 
 CbpLogger logger("Data\\F4SE\\Plugins\\cbp.log");

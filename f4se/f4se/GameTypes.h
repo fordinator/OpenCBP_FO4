@@ -10,7 +10,29 @@ class TESForm;
 struct BSIntrusiveRefCounted
 {
 public:
-	volatile SInt32	m_refCount;	// 00
+	mutable UInt32	refCount;	// 00
+};
+
+// Not actually implemented, just a wrapper
+template <typename T>
+class BSTSmartPointer
+{
+public:
+	operator bool() const noexcept { return static_cast<bool>(_ptr); }
+
+	T* get() const noexcept { return _ptr; }
+
+	T& operator*() const
+	{
+		return *_ptr;
+	}
+
+	T* operator->() const
+	{
+		return _ptr;
+	}
+
+	T* _ptr;
 };
 
 // 04
@@ -54,11 +76,11 @@ class BSReadWriteLock
 public:
 	BSReadWriteLock() : threadID(0), lockValue(0) {}
 
-	DEFINE_MEMBER_FN_0(LockForRead, void, 0x0153EDF0);
-	DEFINE_MEMBER_FN_0(LockForWrite, void, 0x0153EE70);
+	DEFINE_MEMBER_FN_0(LockForRead, void, 0x01659400);
+	DEFINE_MEMBER_FN_0(LockForWrite, void, 0x01659480);
 
-	DEFINE_MEMBER_FN_0(UnlockRead, void, 0x0153F0C0);
-	DEFINE_MEMBER_FN_0(UnlockWrite, void, 0x0153F0D0);
+	DEFINE_MEMBER_FN_0(UnlockRead, void, 0x016596D0);
+	DEFINE_MEMBER_FN_0(UnlockWrite, void, 0x016596E0);
 };
 STATIC_ASSERT(sizeof(BSReadWriteLock) == 0x8);
 
@@ -143,14 +165,14 @@ public:
 
 		MEMBER_FN_PREFIX(Ref);
 		// 
-		DEFINE_MEMBER_FN(ctor, Ref *, 0x01561AD0, const char * buf);
+		DEFINE_MEMBER_FN(ctor, Ref *, 0x0167C1E0, const char * buf);
 		// 
-		DEFINE_MEMBER_FN(ctor_w, Ref *, 0x015629A0, const wchar_t * buf);
+		DEFINE_MEMBER_FN(ctor_w, Ref *, 0x0167D0B0, const wchar_t * buf);
 		// 
-		DEFINE_MEMBER_FN(Set, Ref *, 0x01561C10, const char * buf);
-		DEFINE_MEMBER_FN(Set_w, Ref *, 0x01563B90, const wchar_t * buf);
+		DEFINE_MEMBER_FN(Set, Ref *, 0x0167C320, const char * buf);
+		DEFINE_MEMBER_FN(Set_w, Ref *, 0x0167E2A0, const wchar_t * buf);
 
-		DEFINE_MEMBER_FN(Release, void, 0x01562D90);
+		DEFINE_MEMBER_FN(Release, void, 0x0167D4A0);
 
 		Ref();
 		Ref(const char * buf);
@@ -288,7 +310,7 @@ public:
 		Heap_Free(entries);																// Free the old block
 		entries = newBlock;																// Assign the new block
 		capacity = numEntries;															// Capacity is now the number of total entries in the block
-		count = min(capacity, count);													// Count stays the same, or is truncated to capacity
+		count = (std::min)(capacity, count);													// Count stays the same, or is truncated to capacity
 		return true;
 	}
 

@@ -1,19 +1,19 @@
 #include "f4se/GameData.h"
 
 // 
-RelocPtr <DataHandler*> g_dataHandler(0x02E64E68);
+RelocPtr <DataHandler*> g_dataHandler(0x030E7100);
 
 // 
-RelocPtr <bool> g_isGameDataReady(0x02FEAE44);
+RelocPtr <bool> g_isGameDataReady(0x0326D3A4);
 
 // 
-RelocPtr <DefaultObjectMap*> g_defaultObjectMap(0x02E69990);
+RelocPtr <DefaultObjectMap*> g_defaultObjectMap(0x030EBED0);
 
 // 
-RelocPtr <BSReadWriteLock> g_defaultObjectMapLock(0x02E699E0);
+RelocPtr <BSReadWriteLock> g_defaultObjectMapLock(0x030EBF20);
 
 // 
-RelocPtr <FavoritesManager*> g_favoritesManager(0x02FF15C8);
+RelocPtr <FavoritesManager*> g_favoritesManager(0x03273B48);
 
 class LoadedModFinder
 {
@@ -22,7 +22,7 @@ class LoadedModFinder
 public:
 	LoadedModFinder(const char * str) : m_stringToFind(str) { }
 
-	bool Accept(ModInfo* modInfo)
+	bool Accept(ModInfo* modInfo) const
 	{
 		return _stricmp(modInfo->name, m_stringToFind) == 0;
 	}
@@ -30,12 +30,16 @@ public:
 
 const ModInfo * DataHandler::LookupModByName(const char * modName)
 {
-	return modList.modInfoList.Find(LoadedModFinder(modName));
+	LoadedModFinder finder(modName);
+
+	return modList.modInfoList.Find(finder);
 }
 
 UInt8 DataHandler::GetModIndex(const char* modName)
 {
-	return modList.modInfoList.GetIndexOf(LoadedModFinder(modName));
+	LoadedModFinder finder(modName);
+
+	return modList.modInfoList.GetIndexOf(finder);
 }
 
 const ModInfo* DataHandler::LookupLoadedModByName(const char* modName)

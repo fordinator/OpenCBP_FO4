@@ -123,6 +123,7 @@ bool printStuff(NiAVObject* avObj, int depth)
     //	logger.info("%snode %s, RTTI %s\n", ss, node->m_name, node->GetRTTI()->name);
     //}
     //return false;
+    return false;
 }
 
 template<class T>

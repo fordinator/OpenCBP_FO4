@@ -268,6 +268,13 @@ class BSPointerHandleManagerInterface
 {
 public:
 	typedef T value_type;
+
+	static bool GetSmartPointer(NiPointer<T>& spSmartPointer, const BSPointerHandle<T>& aHandle)
+	{
+		using _GetSmartPointer = bool(*)(NiPointer<T>& spSmartPointer, const BSPointerHandle<T>& aHandle);
+		RelocAddr <_GetSmartPointer> GetSmartPointerAddr(0x0021E490);
+		return GetSmartPointerAddr(spSmartPointer, aHandle);
+	}
 };
 
 template <class T>

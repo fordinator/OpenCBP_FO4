@@ -143,6 +143,8 @@ PluginAllocator	g_localPluginAllocator;
 PluginManager::LoadedPlugin *	PluginManager::s_currentLoadingPlugin = NULL;
 PluginHandle					PluginManager::s_currentPluginHandle = 0;
 
+PluginManager::PluginListeners	PluginManager::s_pluginListeners;
+
 static const F4SEInterface g_F4SEInterface =
 {
 	PACKED_F4SE_VERSION,
@@ -241,8 +243,6 @@ PluginManager::LoadedPlugin::LoadedPlugin()
 
 void PluginManager::Init(void)
 {
-	bool	result = false;
-
 	if(FindPluginDirectory())
 	{
 		_MESSAGE("plugin directory = %s", m_pluginDirectory.c_str());
@@ -253,8 +253,6 @@ void PluginManager::Init(void)
 		__try
 		{
 			ScanPlugins();
-
-			result = true;
 		}
 		__except(EXCEPTION_EXECUTE_HANDLER)
 		{
@@ -301,7 +299,7 @@ void PluginManager::InstallPlugins(UInt32 phase)
 		if(plugin.handle)
 		{
 			plugin.load[phase] = (_F4SEPlugin_Load)GetProcAddress(plugin.handle, (phase == kPhase_Preload) ? "F4SEPlugin_Preload" : "F4SEPlugin_Load");
-			if(plugin.load)
+			if(plugin.load[phase])
 			{
 				const char * loadStatus = nullptr;
 
@@ -333,7 +331,6 @@ void PluginManager::InstallPlugins(UInt32 phase)
 			// fix iterator
 			i--;
 		}
-
 	}
 
 	s_currentLoadingPlugin = nullptr;
@@ -542,6 +539,8 @@ void PluginManager::ScanPlugins(void)
 			LogPluginLoadError(plugin, "couldn't load plugin", GetLastError());
 		}
 	}
+
+	s_pluginListeners.resize(handleIdx + 1);
 }
 
 const char * PluginManager::CheckAddressLibrary(void)
@@ -658,14 +657,14 @@ const char * PluginManager::CheckPluginCompatibility(const F4SEPluginVersionData
 		}
 
 		// version compatibility
-		const UInt32 kCurrentAddressLibrary = F4SEPluginVersionData::kAddressIndependence_AddressLibrary_1_10_980;
+		const UInt32 kCurrentAddressLibrary = F4SEPluginVersionData::kAddressIndependence_AddressLibrary_1_11_137;
 
 		bool hasAddressIndependence = version.addressIndependence &
 			(F4SEPluginVersionData::kAddressIndependence_Signatures |
 			kCurrentAddressLibrary);
 		bool hasStructureIndependence = version.structureIndependence &
 			(F4SEPluginVersionData::kStructureIndependence_NoStructs |
-			F4SEPluginVersionData::kStructureIndependence_1_10_980Layout);
+			F4SEPluginVersionData::kStructureIndependence_1_11_137Layout);
 		
 		bool versionIndependent = hasAddressIndependence && hasStructureIndependence;
 
@@ -750,6 +749,7 @@ struct BetterPluginName
 // some plugins have non-descriptive names resulting in bad bug reports
 static const BetterPluginName kBetterPluginNames[] =
 {
+	{ "f4ee.dll", "LooksMenu" },
 	{ nullptr, nullptr }
 };
 
@@ -825,27 +825,11 @@ void PluginManager::UpdateAddressLibraryPrompt()
 }
 
 // Plugin communication interface
-struct PluginListener {
-	PluginHandle	listener;
-	F4SEMessagingInterface::EventCallback	handleMessage;
-};
-
-typedef std::vector<std::vector<PluginListener> > PluginListeners;
-static PluginListeners s_pluginListeners;
-
 bool PluginManager::RegisterListener(PluginHandle listener, const char* sender, F4SEMessagingInterface::EventCallback handler)
 {
-	// because this can be called while plugins are loading, gotta make sure number of plugins hasn't increased
-	UInt32 numPlugins = g_pluginManager.GetNumPlugins() + 1;
-	if (s_pluginListeners.size() < numPlugins)
-	{
-		s_pluginListeners.resize(numPlugins + 5);	// add some extra room to avoid unnecessary re-alloc
-	}
+	_MESSAGE("registering plugin listener for %s at %u of %u", sender, listener, s_pluginListeners.size());
 
-	_MESSAGE("registering plugin listener for %s at %u of %u", sender, listener, numPlugins);
-
-	// handle > num plugins = invalid
-	if (listener > g_pluginManager.GetNumPlugins() || !handler) 
+	if (listener >= s_pluginListeners.size() || !handler) 
 	{
 		return false;
 	}

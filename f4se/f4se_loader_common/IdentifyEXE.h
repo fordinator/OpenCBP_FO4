@@ -17,6 +17,10 @@ struct ProcHookInfo
 {
 	UInt64	version;
 	UInt32	procType;
+	UInt32	packedVersion;
 };
 
 bool IdentifyEXE(const char * procName, bool isEditor, std::string * dllSuffix, ProcHookInfo * hookInfo);
+
+bool GetFileVersion(const char * path, VS_FIXEDFILEINFO * info, std::string * outProductName);
+void DumpVersionInfo(const VS_FIXEDFILEINFO & info);

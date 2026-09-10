@@ -1,6 +1,6 @@
 #include "f4se/ScaleformTranslator.h"
 
 // 
-RelocAddr <_CreateEmptyString> CreateEmptyString(0x015628D0);
+RelocAddr <_CreateEmptyString> CreateEmptyString(0x0167CFE0);
 // 
-RelocAddr <_SetWideString> SetWideString(0x01562A50);
+RelocAddr <_SetWideString> SetWideString(0x0167D160);

@@ -85,7 +85,11 @@ public:
 class ThumbstickEvent : public IDEvent, public InputEvent
 {
 public:
-	UInt32 unk20[6];
+	UInt64 stick;
+	float x;
+	float y;
+	UInt32 unk40; // direction with deadzones 1 up 2 right 3 down 4 left
+	UInt32 unk44; // previous direction
 };
 STATIC_ASSERT(sizeof(ThumbstickEvent) == 0x048);
 
@@ -245,7 +249,7 @@ public:
 private:
 	// GameMenuBase:BSInputEventUser override should be the only one calling this function
 	friend class GameMenuBase;
-	DEFINE_MEMBER_FN_1(Impl_OnGameMenuBaseButtonEvent, bool, 0x019FE850, ButtonEvent * button);
+	DEFINE_MEMBER_FN_1(Impl_OnGameMenuBaseButtonEvent, bool, 0x01B19D00, ButtonEvent * button);
 };
 
 // 30

@@ -15,6 +15,9 @@ class ActorValueInfo;
 class Condition;
 class NiAVObject;
 class BSTriShape;
+class BSFaceGenNiNode;
+struct BSFaceGenPendingHeadData;
+struct FaceGenData;
 
 class BGSCharacterTint
 {
@@ -413,7 +416,7 @@ public:
 	UInt64					unk520[(0x548-0x520)/8];	// 520
 
 	MEMBER_FN_PREFIX(CharacterCreation);
-	DEFINE_MEMBER_FN(LoadPreset, void, 0x00B441C0, UInt32 presetIndex); // Loads preset by index onto the actor
+	DEFINE_MEMBER_FN(LoadPreset, void, 0x00BBC680, UInt32 presetIndex); // Loads preset by index onto the actor
 };
 
 // ??
@@ -435,7 +438,7 @@ public:
 	NiAVObject	* camera;							// 34A8 - NiCamera (WorldRoot Camera)
 
 	MEMBER_FN_PREFIX(BSFaceGenManager);
-	DEFINE_MEMBER_FN(ApplyDynamicData, void, 0x0068A8F0, BSTriShape * trishape);
+	DEFINE_MEMBER_FN(ApplyDynamicData, void, 0x006DE390, BSTriShape * trishape);
 };
 STATIC_ASSERT(offsetof(BSFaceGenManager, unk3230) == 0x3230);
 STATIC_ASSERT(offsetof(BSFaceGenManager, unk3478) == 0x3478);
@@ -473,4 +476,11 @@ extern RelocAddr<uintptr_t> s_BGSCharacterTint_Template_MaskVtbl;
 extern RelocAddr<uintptr_t> s_BGSCharacterTint_Template_PaletteVtbl;
 extern RelocAddr<uintptr_t> s_BGSCharacterTint_Template_TextureSetVtbl;
 
-extern RelocPtr <tHashSet<CharacterCreation::MorphIntensity, TESNPC*>> g_morphIntensityMap;
+namespace BSFaceGenUtils
+{
+	typedef void (*_PrepareHeadPartForShaders)(BSFaceGenNiNode* apNode, BGSHeadPart* apHeadPart, TESNPC* apNPC, BSFaceGenPendingHeadData* apPendingHeadData);
+	extern RelocAddr<_PrepareHeadPartForShaders> PrepareHeadPartForShaders;
+
+	typedef void (*_StartFaceCustomizationGenerationForNPC)(TESNPC* arNPC, const BSTArray<BGSCharacterTint::Entry*>& arData, FaceGenData* arFaceGenData, void* apCustomizationBuffer, UInt32 auiLoadingPriority, bool abForceMaxLayers);
+	extern RelocAddr<_StartFaceCustomizationGenerationForNPC> StartFaceCustomizationGenerationForNPC;
+}

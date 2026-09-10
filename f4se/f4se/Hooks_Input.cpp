@@ -16,11 +16,11 @@
 #define LOG_INPUT_HOOK 0
 
 typedef void (* _CreateMenuControlHandlers)(MenuControls * mem);
-RelocAddr <_CreateMenuControlHandlers> CreateMenuControlHandlers(0x00FEDDA0);
+RelocAddr <_CreateMenuControlHandlers> CreateMenuControlHandlers(0x01074E80);
 _CreateMenuControlHandlers CreateMenuControlHandlers_Original = nullptr;
 
 typedef void (* _CreatePlayerControlHandlers)(PlayerControls * mem);
-RelocAddr <_CreatePlayerControlHandlers> CreatePlayerControlHandlers(0x00D56C60);
+RelocAddr <_CreatePlayerControlHandlers> CreatePlayerControlHandlers(0x00DDCCB0);
 _CreatePlayerControlHandlers CreatePlayerControlHandlers_Original = nullptr;
 
 #if HOOK_RAW_INPUT
@@ -265,7 +265,7 @@ void Hooks_Input_Commit()
 			{
 				Xbyak::Label retnLabel;
 
-				mov(ptr[rsp+0x08], rbx);
+				mov(ptr[rsp + 0x08], rbx);
 
 				jmp(ptr [rip + retnLabel]);
 
@@ -290,7 +290,7 @@ void Hooks_Input_Commit()
 			{
 				Xbyak::Label retnLabel;
 
-				mov(ptr[rsp+0x10], rbx);
+				mov(ptr[rsp + 0x18], rbx);
 
 				jmp(ptr [rip + retnLabel]);
 
