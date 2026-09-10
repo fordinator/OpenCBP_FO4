@@ -1,4 +1,6 @@
 #include <algorithm>
+#include <atomic>
+#include <concurrent_unordered_set.h>
 #include <unordered_map>
 
 #include "ActorUtils.h"
@@ -25,9 +27,29 @@ std::string actorUtils::GetActorRaceEID(Actor* actor)
     return std::string(actor->race->editorId.c_str());
 }
 
+// One-shot scene-graph dump so cbp.log shows what the actor's 3D actually
+// looks like on this game version. Fires once for the first failure and once
+// for the first success, then stays quiet.
+static void DumpNodeTree(NiAVObject* node, int depth, int maxDepth)
+{
+    if (!node) return;
+    const char* nm = node->m_name.c_str();
+    NiNode* asNode = node->GetAsNiNode();
+    logger.Error("    %*s%s%s\n", depth * 2, "", nm ? nm : "<unnamed>", asNode ? "/" : "");
+    if (!asNode || depth >= maxDepth) return;
+    for (UInt32 i = 0; i < asNode->m_children.m_emptyRunStart; i++)
+    {
+        NiAVObject* child = asNode->m_children.m_data[i];
+        if (child) DumpNodeTree(child, depth + 1, maxDepth);
+    }
+}
+
 NiAVObject* actorUtils::GetBaseSkeleton(Actor* actor)
 {
-    BSFixedString skeletonNif_name("skeleton.nif");
+    static BSFixedString skeletonNif_name("skeleton.nif");
+    static std::atomic<bool> dumpedFailure = false;
+    static std::atomic<bool> dumpedSuccess = false;
+    static concurrency::concurrent_unordered_set<UInt32> loggedFailure;
 
     if (!actorUtils::IsActorValid(actor))
     {
@@ -40,12 +62,40 @@ NiAVObject* actorUtils::GetBaseSkeleton(Actor* actor)
         logger.Error("%s:No loaded state for actor %08x\n", __func__, actor->formID);
         return NULL;
     }
-    auto obj = loadedState->rootNode->GetObjectByName(&skeletonNif_name);
+
+    NiNode* root = loadedState->rootNode;
+    const char* how = "child";
+    NiAVObject* obj = root->GetObjectByName(&skeletonNif_name);
+
+    // GetObjectByName searches descendants; if the loaded root IS skeleton.nif,
+    // accept the root itself.
+    if (!obj && root->m_name.c_str() && _stricmp(root->m_name.c_str(), "skeleton.nif") == 0)
+    {
+        obj = root;
+        how = "root";
+    }
 
     if (!obj)
     {
-        logger.Error("%s: Couldn't get name for loaded state for actor %08x\n", __func__, actor->formID);
+        if (loggedFailure.insert(actor->formID).second)
+        {
+            logger.Error("%s: no skeleton.nif under root '%s' for actor %08x (further failures for this actor not logged)\n",
+                         __func__, root->m_name.c_str() ? root->m_name.c_str() : "<unnamed>", actor->formID);
+        }
+        if (!dumpedFailure.exchange(true))
+        {
+            logger.Error("%s: scene graph dump (FAILURE) for actor %08x, root parent '%s':\n", __func__, actor->formID,
+                         (root->m_parent && root->m_parent->m_name.c_str()) ? root->m_parent->m_name.c_str() : "<none>");
+            DumpNodeTree(root, 0, 3);
+        }
         return NULL;
+    }
+
+    if (!dumpedSuccess.exchange(true))
+    {
+        logger.Error("%s: found skeleton.nif as %s for actor %08x; scene graph dump (SUCCESS), root parent '%s':\n", __func__, how, actor->formID,
+                     (root->m_parent && root->m_parent->m_name.c_str()) ? root->m_parent->m_name.c_str() : "<none>");
+        DumpNodeTree(root, 0, 3);
     }
 
     return obj;

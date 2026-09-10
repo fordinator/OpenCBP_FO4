@@ -44,6 +44,7 @@ class Thing
     NiMatrix43 origWorldRot;
     bool rightSide;
     Actor* m_actor;
+    bool initialized;   // skeleton-relative state (origWorldRot, rightSide) has been computed
 
 public:
     bool isEnabled;
@@ -109,6 +110,7 @@ public:
     ~Thing();
 
     NiAVObject* IsThingActorValid(Actor* actor);
+    void InitFromSkeleton(NiAVObject* skeletonObj, NiAVObject* obj);
     void Reset(Actor* actor);
     NiPoint3 CalculateGravitySupine(Actor* actor);
     void StoreOriginalTransforms(Actor* actor);

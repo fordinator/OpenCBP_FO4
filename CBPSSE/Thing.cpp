@@ -31,23 +31,46 @@ void Thing::ShowRot(NiMatrix43& r)
     logger.Info("%8.4f %8.4f %8.4f %8.4f\n", r.data[2][0], r.data[2][1], r.data[2][2], r.data[2][3]);
 }
 
+static inline void SetIdentity(NiMatrix43& m)
+{
+    for (int r = 0; r < 3; ++r)
+        for (int c = 0; c < 4; ++c)
+            m.data[r][c] = (r == c) ? 1.0f : 0.0f;
+}
+
 Thing::Thing(NiAVObject* obj, BSFixedString& name, Actor* actor)
     : thingObj(obj)
     , boneName(name)
     , velocity(NiPoint3(0, 0, 0))
     , m_actor(actor)
 {
-
+    // NiPoint3 / NiMatrix43 have no constructors. Every member gets a sane value
+    // BEFORE anything that can fail, so a Thing that couldn't find its skeleton
+    // yet is inert instead of full of stack garbage.
     isEnabled = true;
+    initialized = false;
+    oldWorldPos = obj->m_worldTransform.pos;
+    oldWorldPosRot = obj->m_worldTransform.pos;
+    oldRotZ = 0.0f;
+    rightSide = false;
+    SetIdentity(firstWorldRot);
+    SetIdentity(origWorldRot);
+    time = clock();
+
+    IsBreastBone = ContainsNoCase(std::string(boneName.c_str()), "Breast");
 
     auto skeletonObj = actorUtils::GetBaseSkeleton(actor);
     if (skeletonObj == NULL)
     {
-        logger.Error("%s: Didn't find thing %s's base skeleton.nif for actor %08x \n", __func__, boneName.c_str(), actor->formID);
+        logger.Error("%s: Didn't find thing %s's base skeleton.nif for actor %08x; will retry on update\n", __func__, boneName.c_str(), actor->formID);
         return;
     }
 
-    //->m_worldTransform.rot * skeletonObj->m_worldTransform.pos
+    InitFromSkeleton(skeletonObj, obj);
+}
+
+void Thing::InitFromSkeleton(NiAVObject* skeletonObj, NiAVObject* obj)
+{
     auto firstWorldPos = skeletonObj->m_worldTransform.rot * obj->m_worldTransform.pos;
     auto firstSkeletonPos = skeletonObj->m_worldTransform.rot * skeletonObj->m_worldTransform.pos;
 
@@ -55,16 +78,13 @@ Thing::Thing(NiAVObject* obj, BSFixedString& name, Actor* actor)
 
     // Set initial positions
     oldWorldPos = obj->m_worldTransform.pos;
+    oldWorldPosRot = obj->m_worldTransform.pos;
+    velocity = NiPoint3(0, 0, 0);
 
-    //logger.Error("obj->m_worldTransform.rot.Transpose():");
-    //ShowRot(obj->m_worldTransform.rot.Transpose());
-    //logger.Error("obj->m_localTransform.rot:");
-    //ShowRot(obj->m_localTransform.rot);
     origWorldRot = obj->m_localTransform.rot.Transpose() * obj->m_worldTransform.rot;
 
     time = clock();
-
-    IsBreastBone = ContainsNoCase(std::string(boneName.c_str()), "Breast");
+    initialized = true;
 }
 
 Thing::~Thing()
@@ -377,6 +397,15 @@ void Thing::UpdateThing(Actor* actor)
     ShowRot(skeletonObj->m_worldTransform.rot);
     //ShowPos(obj->m_parent->m_worldTransform.rot.Transpose() * obj->m_localTransform.pos);
 #endif
+
+    if (!initialized)
+    {
+        // Skeleton was not available when this Thing was built; finish set-up now
+        // and skip this frame so the first step starts from a real position.
+        logger.Error("%s: late init of bone %s for actor %08x\n", __func__, boneName.c_str(), actor->formID);
+        InitFromSkeleton(skeletonObj, obj);
+        return;
+    }
 
     NiMatrix43 skelSpaceInvTransform = skeletonObj->m_localTransform.rot.Transpose();
     NiPoint3 origWorldPos = (obj->m_parent->m_worldTransform.rot.Transpose() * origLocalPos[boneName.c_str()][actor->formID]) + obj->m_parent->m_worldTransform.pos;
