@@ -40,11 +40,16 @@ class Thing
     clock_t time;
     NiAVObject* thingObj;
     bool IsBreastBone;
+    bool IsButtBone;
     NiMatrix43 firstWorldRot;
     NiMatrix43 origWorldRot;
     bool rightSide;
     Actor* m_actor;
     bool initialized;   // skeleton-relative state (origWorldRot, rightSide) has been computed
+    float dynamicBreastScale;
+    float dynamicStiffnessMul;
+    float dynamicDampingMul;
+    clock_t lastMorphCheckTime;
 
 public:
     bool isEnabled;

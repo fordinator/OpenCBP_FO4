@@ -17,10 +17,17 @@ namespace actorUtils
     bool IsActorMale(Actor* actor);
     bool IsActorTrackable(Actor* actor);
     bool IsActorValid(Actor* actor);
-    bool IsActorInPowerArmor(Actor* actor);
     bool IsBoneInWhitelist(Actor* actor, std::string boneName);
-
     const EquippedArmor GetActorEquippedArmor(Actor* actor, UInt32 slot);
     UInt64 BuildActorKey(Actor* actor);
     config_t BuildConfigForActor(Actor* actor, UInt64 hashKey);
+
+    struct ArmorSupportTier
+    {
+        float scaleMul;
+        float stiffnessMul;
+        float dampingMul;
+    };
+
+    ArmorSupportTier GetActorArmorSupport(Actor* actor, bool isBreastBone, bool isButtBone);
 }

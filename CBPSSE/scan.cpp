@@ -245,7 +245,7 @@ void UpdateActors()
             {
                 auto& simObj = actorsIterator->second;
                 auto key = BuildActorKey(a.actor);
-                auto& composedConfig = BuildConfigForActor(a.actor, key);
+                auto composedConfig = BuildConfigForActor(a.actor, key);
 
                 simObj.SetActorKey(key);
                 simObj.AddBonesToThings(a.actor, boneNames);
@@ -288,7 +288,7 @@ void UpdateActors()
         else
         {
             auto key = BuildActorKey(a.actor);
-            auto& composedConfig = BuildConfigForActor(a.actor, key);
+            auto composedConfig = BuildConfigForActor(a.actor, key);
 
             //logger.Error("UpdateActors: Setting key for actor %x...\n", a.id);
             simObj.SetActorKey(key);
@@ -318,7 +318,7 @@ void UpdateActors()
                     {
                         logger.Error("UpdateActors: Key change detected for actor %08x.\n", a.actor->formID);
                         simObj.SetActorKey(key);
-                        auto& composedConfig = BuildConfigForActor(a.actor, key);
+                        auto composedConfig = BuildConfigForActor(a.actor, key);
                         simObj.UpdateConfigs(composedConfig);
                     }
                     simObj.Update(a.actor);
