@@ -173,6 +173,7 @@
     <ClInclude Include="ActorEntry.h" />
     <ClInclude Include="AddressLibrary.h" />
     <ClInclude Include="FrameHook.h" />
+    <ClInclude Include="NavmeshPrecutFix.h" />
     <ClInclude Include="OCBP_AddressIDs.h" />
     <ClInclude Include="ActorUtils.h" />
     <ClInclude Include="INIReader.h" />
@@ -205,6 +206,7 @@
     <ClCompile Include="config.cpp" />
     <ClCompile Include="AddressLibrary.cpp" />
     <ClCompile Include="FrameHook.cpp" />
+    <ClCompile Include="NavmeshPrecutFix.cpp" />
     <ClCompile Include="log.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="scan.cpp" />
