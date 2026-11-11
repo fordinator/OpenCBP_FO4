@@ -165,6 +165,11 @@ bool LoadConfig()
         priorityNameMappings["A"] = 0;
         configArmorOverrideMap[0].slots.insert(11);
         usedSlots.insert(11);
+        usedSlots.insert(3);  // Slot 33: Body / Outfits / Dresses / Underarmor
+        usedSlots.insert(6);  // Slot 36: Underwear Top / Bra
+        usedSlots.insert(7);  // Slot 37: Underwear Bottom / Panties
+        usedSlots.insert(10); // Slot 40: Left Leg Armor
+        usedSlots.insert(12); // Slot 42: Right Leg Armor
         configArmorOverrideMap[0].isFilterInverted = false;
 
         //Read armorIgnore
@@ -535,7 +540,9 @@ bool LoadConfig()
     bonesSet = std::set<std::string>(boneNames.begin(), boneNames.end());
     boneNames.assign(bonesSet.begin(), bonesSet.end());
 
-    // "Delete" bones specified in [Attach] but not [Attach.A] from the latter for compatibility with presets
+    // For detectArmorCompat, only explicitly blank entries ("bone=") in [Attach.A]
+    // will disable bones. Bones merely omitted or left commented out retain base physics.
+    /*
     if (detectArmorCompat)
     {
         for (auto & boneName : boneNames)
@@ -551,6 +558,7 @@ bool LoadConfig()
             }
         }
     }
+    */
 
     for (auto & map : priorityNameMappings)
     {

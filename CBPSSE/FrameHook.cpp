@@ -1,6 +1,7 @@
 #include "FrameHook.h"
 #include "AddressLibrary.h"
 #include "OCBP_AddressIDs.h"
+#include "NavmeshPrecutFix.h"
 #include "log.h"
 
 #include "../detourxs-master/detourxs.h"
@@ -20,10 +21,23 @@ namespace
     _ProcessEventQueue_Internal s_origProcessEventQueue = nullptr;
     DetourXS s_detour;
 
+    void CheckNavmeshOobReport()
+    {
+        static std::uint64_t s_lastOob = 0;
+        const std::uint64_t currentOob = GetNavmeshOobCount();
+        if (currentOob != s_lastOob)
+        {
+            logger.Error("[NavmeshPrecutFix] Caught %llu out-of-bounds dynamic navmesh precut edge(s) - prevented CTD!\n",
+                         (unsigned long long)currentOob);
+            s_lastOob = currentOob;
+        }
+    }
+
     void hk_ProcessEventQueue_Internal(void* thisPtr)
     {
         s_origProcessEventQueue(thisPtr);
         UpdateActors();
+        CheckNavmeshOobReport();
     }
 
     bool InstallAddressLibraryHook(UInt32 runtimeVersion)
@@ -77,7 +91,7 @@ namespace
     class UpdateActorsTask : public ITaskDelegate
     {
     public:
-        virtual void Run() override { UpdateActors(); }
+        virtual void Run() override { UpdateActors(); CheckNavmeshOobReport(); }
     };
 
     bool InstallTaskHook(F4SETaskInterface* task)

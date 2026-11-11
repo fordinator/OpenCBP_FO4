@@ -26,4 +26,8 @@ namespace OCBP_AddressIDs
     // RVA of the same function on the runtime this build targets, used ONLY to
     // derive the ID above when it is still 0. Never used for hooking.
     constexpr std::uint64_t kBootstrapRVA_ProcessEventQueue_Internal_1_11_240 = 0x01B1E2F0;
+
+    // DynamicNavmesh::ApplyActivePrecutsToNavmesh helper loop
+    // Fallout4.exe 1.11.240 RVA: 0x01E39B00 (ID 2301453)
+    constexpr std::uint64_t kDynamicNavmesh_ApplyActivePrecutsToNavmesh = 2301453;
 }

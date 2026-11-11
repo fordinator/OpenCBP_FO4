@@ -7,6 +7,7 @@
 #include "log.h"
 #include "config.h"
 #include "FrameHook.h"
+#include "NavmeshPrecutFix.h"
 #include "PapyrusOCBP.h"
 
 // This build targets exactly one runtime. Everything that touches game memory
@@ -34,6 +35,8 @@ void MessageHandler(F4SEMessagingInterface::Message* msg)
         LoadConfig();
         logger.Error("kMessage_GameDataReady: installing frame hook\n");
         InstallFrameHook(g_task, g_runtimeVersion, hookMode);
+        logger.Error("kMessage_GameDataReady: installing navmesh precut fix\n");
+        InstallNavmeshPrecutFix(g_runtimeVersion);
         logger.Error("OpenCBP load complete (hook=%s)\n", FrameHookModeName(ActiveFrameHookMode()));
     }
     break;
