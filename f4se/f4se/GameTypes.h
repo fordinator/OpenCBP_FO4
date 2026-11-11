@@ -186,6 +186,7 @@ public:
 
 		const char * c_str() const { return operator const char *(); }
 		operator const char *() const { return data ? data->Get<char>() : nullptr; }
+		operator std::string() const { const char* s = operator const char*(); return s ? s : ""; }
 
 		const wchar_t * wc_str() { return operator const wchar_t *(); }
 		operator const wchar_t *() { return data ? data->Get<wchar_t>() : nullptr; }

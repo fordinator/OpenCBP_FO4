@@ -487,7 +487,7 @@ struct IsArrayType<VMArray<T>>
 };
 
 template <typename T>
-UInt64 GetTypeID <T>(VirtualMachine * vm)
+UInt64 GetTypeID(VirtualMachine * vm)
 {
 	UInt64		result;
 

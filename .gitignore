@@ -263,3 +263,6 @@ __pycache__/
 # omit skse64
 skse64/
 /skse64_se
+
+# Local cross-compilation build directory
+build_x64/
